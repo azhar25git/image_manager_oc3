@@ -1,0 +1,279 @@
+<?xml version="1.0" encoding="utf-8"?>
+<modification>
+    <name>Image Manager Plus OC3</name>
+    <code>Image Manager Plus OC3</code>
+    <version>0.1</version>
+    <author>Azhar Uddin</author>
+    <link>flybybiz@gmail.com</link>
+    <file path="admin/view/template/catalog/product_form.twig">
+        <operation error="skip">
+            <search><![CDATA[{{ footer }}]]></search>
+            <add position="before"><![CDATA[
+                  <!-- input Last Folder Remember -->
+                <input type="hidden" value="{{ last_folder }}" id="last-folder">
+             <!-- Multiple images select and insert into product form  -->
+<script>
+  $(document).ready(function() {
+
+    // Green button - Insert images into form - default order 
+    $(document).on('click', '#multiple-insert', function() {
+
+        var images = [];
+        $('#image-to-select:checked').each(function(i){
+          images[i] = $(this).val();
+        });
+   
+        $('#input-image').val(images[0]);
+        $('#thumb-image img').attr('src', '../image/' + images[0]).css('max-width', '100px');
+
+        for(var i = 0; i < images.length-1; i++) {
+          addImage();
+          $('#input-image' + i).val(images[i+1]);
+          $('#thumb-image' + i + ' img').attr('src', '../image/' + images[i+1]).css('max-width', '100px');
+        }
+        
+        $('#modal-image').modal('hide');
+
+    })
+  });
+
+
+  // Adding images while choosing main image
+  $(document).ready(function() {
+
+      $(document).on('click', '#select-main', function () {
+      
+      var main_image = $(this).parent().find('input').val();
+
+      // Getting checked images
+      var images = [];
+        $('#image-to-select:checked').each(function(i){
+          images[i] = $(this).val();
+        });
+
+        // Remove main image from array of checked ones
+        var index = images.indexOf(main_image);
+        if (index > -1) {
+          images.splice(index, 1);
+        }
+        console.log(images + images.length)
+
+        // Adding main image into form
+        $('#input-image').val(main_image);
+        $('#thumb-image img').attr('src', '../image/' + main_image).css('max-width', '100px');
+        
+
+        // Additional images to form
+        if(images.length === 1) {
+           addImage();
+          $('#input-image0').val(images[0]);
+          $('#thumb-image0' + ' img').attr('src', '../image/' + images[0]).css('max-width', '100px');
+
+        } else {
+          for(var i = 0; i <= images.length-1; i++) {
+
+            addImage();
+            $('#input-image' + i).val(images[i]);
+            $('#thumb-image' + i + ' img').attr('src', '../image/' + images[i]).css('max-width', '100px');
+          }          
+        }
+
+        $('#modal-image').modal('hide');
+
+    });
+
+
+  });
+
+</script>
+            ]]></add>
+        </operation>
+    </file>  
+
+    <file path="admin/controller/catalog/product.php">
+      <operation error="skip">
+        <search><![CDATA[$pagination = new Pagination();]]></search>
+        <add position="before"><![CDATA[
+           // Adding remember last folder option
+        if(isset($this->session->data['last_folder'])) {
+              $data['last_folder'] = $this->session->data['last_folder'];
+            } else {
+              $data['last_folder'] = '';
+            }
+
+          ]]></add>
+      </operation>
+    </file>
+
+    <file path="admin/view/template/common/filemanager.twig">
+      <operation error="skip">
+        <search><![CDATA[<button type="button" data-toggle="tooltip" title="{{ button_delete }}" id="button-delete" class="btn btn-danger"><i class="fa fa-trash-o"></i></button>]]></search>
+        <add position="after"><![CDATA[
+           <button type="buton" data-toggle="tooltip" title="Multiple image insert" id="multiple-insert" class="btn btn-success"><i class="fa fa-files-o"></i></button>
+           <i class="fa fa-question-circle" data-toggle="tooltip" title="Green button on the top of the file manager adds selected picture to the product with the default order. That means that first image is set as default and others are set as additional images in the image tab.                             If you want to select different image as default then select all images and click on the plus button under the image you want as default. " data-placement="bottom"></i>
+          ]]></add>
+      </operation>
+
+      <operation error="skip">
+        <search><![CDATA[<div class="modal-dialog modal-lg">]]></search>
+        <add position="replace"><![CDATA[<div class="modal-dialog modal-lg" style="width:90%">]]></add>
+      </operation>
+
+      <operation error="skip">
+        <search><![CDATA[<input type="checkbox" name="path[]" value="{{ image.path }}" />]]></search>
+        <add position="replace"><![CDATA[<input type="checkbox" name="path[]" value="{{ image.path }}" id="image-to-select" />]]></add>
+      </operation>
+
+      <operation error="skip">
+        <search><![CDATA[<div class="col-sm-3 text-center">]]></search>
+        <add position="replace"><![CDATA[<div class="col-sm-2 text-center">]]></add>
+      </operation>
+
+      <operation error="skip">
+        <search><![CDATA[{{ image.name }}</label>]]></search>
+        <add position="after"><![CDATA[
+           <button id="select-main" class="btn btn-primary btn-xs" title="Insert as default image"><i class="fa fa-plus-square"></i></button>
+        ]]></add>
+
+      </operation>
+
+      <operation error="skip">
+        <search><![CDATA[$('a.directory').on('click', function(e) {]]></search>
+        <add position="replace" offset="4"><![CDATA[
+          $('a.directory').on('click', function(e) {
+            e.preventDefault();
+
+            // Storing last folder into local storage
+            localStorage.setItem('lastFolder', $(this).attr('href'));
+
+            $('#modal-image').load($(this).attr('href'));
+          });
+
+        ]]></add>
+
+      </operation>
+
+      <operation error="skip">
+        <search><![CDATA[$('.pagination a').on('click', function(e) {]]></search>
+        <add position="replace" offset="4"><![CDATA[
+          $('.pagination a').on('click', function(e) {
+            e.preventDefault();
+            
+            // Storing last folder and page into local storage
+            localStorage.setItem('lastFolder', $(this).attr('href'));
+
+
+            $('#modal-image').load($(this).attr('href'));
+          });
+
+        ]]></add>
+
+      </operation>
+
+      <operation error="skip">
+        <search><![CDATA[$('#button-parent').on('click', function(e) {]]></search>
+        <add position="replace" offset="4"><![CDATA[
+          $('#button-parent').on('click', function(e) {
+            e.preventDefault();
+
+            // Storing last folder into local storage
+           localStorage.setItem('lastFolder', $(this).attr('href'));
+            
+            $('#modal-image').load($(this).attr('href'));
+          });
+
+        ]]></add>
+
+      </operation>
+
+    </file>
+    <file path="admin/view/javascript/common.js">
+      <operation error="skip">
+        <search><![CDATA[$(document).on('click', 'a[data-toggle=\'image\']', function(e) {]]></search>
+        <add position="replace" offset="47"><![CDATA[$(document).delegate('a[data-toggle=\'image\']', 'click', function(e) {
+    e.preventDefault();
+  
+    var element = this;
+  
+    $(element).popover({
+      html: true,
+      placement: 'right',
+      trigger: 'manual',
+      content: function() {
+        return '<button type="button" id="button-image" class="btn btn-primary"><i class="fa fa-pencil"></i></button> <button type="button" id="button-clear" class="btn btn-danger"><i class="fa fa-trash-o"></i></button>';
+      }
+    });
+    
+    $(element).popover('toggle');   
+  
+    $('#button-image').on('click', function() {
+      $('#modal-image').remove();
+
+      if(localStorage['lastFolder'] != '') {
+        var lastFolder = localStorage['lastFolder'];
+        lastFolderUpdated = lastFolder.replace('thumb=thumb-image', 'thumb=' + $(element).attr('id'));
+
+        imageManagerUrl = lastFolderUpdated;
+      } else {
+        imageManagerUrl = 'index.php?route=common/filemanager&token=' + getURLVar('token') + '&target=' + $(element).parent().find('input').attr('id') + '&thumb=' + $(element).attr('id') + '&directory=' + $('#last-folder').val();
+      }
+
+      $('#modal-image').load($(this).attr('href'));  
+      
+
+      $.ajax({
+        url: imageManagerUrl,
+        dataType: 'html',
+        beforeSend: function() {
+          $('#button-image i').replaceWith('<i class="fa fa-circle-o-notch fa-spin"></i>');
+          $('#button-image').prop('disabled', true);
+        },
+        complete: function() {
+          $('#button-image i').replaceWith('<i class="fa fa-upload"></i>');
+          $('#button-image').prop('disabled', false);
+        },
+        success: function(html) {
+          $('body').append('<div id="modal-image" class="modal">' + html + '</div>');
+  
+          $('#modal-image').modal('show');
+        }
+      });
+  
+      $(element).popover('hide');
+    });
+  
+    $('#button-clear').on('click', function() {
+      $(element).find('img').attr('src', $(element).find('img').attr('data-placeholder'));
+      
+      $(element).parent().find('input').attr('value', '');
+  
+      $(element).popover('hide');
+    });
+  });
+
+
+        ]]></add>
+
+      </operation>
+    </file>
+
+    <file path="admin/controller/common/filemanager.php">
+      <operation error="skip">
+        <search><![CDATA[$images = array_splice($images, ($page - 1) * 16, 16);]]></search>
+        <add position="replace"><![CDATA[$images = array_splice($images, ($page - 1) * 18, 18);]]></add>
+      </operation>
+      <operation error="skip">
+        <search><![CDATA[$pagination->limit = 16;]]></search>
+        <add position="replace"><![CDATA[$pagination->limit = 18;]]></add>
+      </operation>
+       <operation error="skip">
+        <search><![CDATA[$directory = rtrim(DIR_IMAGE . 'catalog/' . str_replace(array('../', '..\\', '..'), '', $this->request->get['directory']), '/');]]></search>
+        <add position="after"><![CDATA[
+          // Store last folder into session
+          $this->session->data['last_folder'] = $this->request->get['directory'];
+      ]]></add>
+      </operation>     
+
+    </file>
+
+</modification>
